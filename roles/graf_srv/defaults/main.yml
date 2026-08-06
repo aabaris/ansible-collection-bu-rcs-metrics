@@ -17,3 +17,4 @@ graf_srv_cfg_def:
   live:
     max_connections: 0
 graf_srv_cfg_extra: {}
+graf_srv_cfg_datasources: []

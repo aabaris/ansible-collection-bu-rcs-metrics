@@ -3,7 +3,11 @@ prom_srv_name: "{{ prom_srv_instance }}-prometheus"
 prom_srv_network: "{{ prom_srv_name }}"
 prom_srv_dir: "/srv/{{ prom_srv_instance }}-prometheus"
 prom_srv_image: "docker.io/prom/prometheus:v3.13.2"
-prom_srv_port: "127.0.0.1:9090:9090"
+prom_srv_hostbind: "127.0.0.1"
+prom_srv_port_ext: "9090"
+prom_srv_port_int: "9090"
+prom_srv_ports:
+  - "{{ prom_srv_hostbind }}:{{ prom_srv_port_ext }}:{{ prom_srv_port_int }}"
 prom_srv_retention: 180d
 prom_srv_max_size: 400GB
 # if need emergency repair set: prom_srv_extra_flags:"--web.enable-admin-api"
