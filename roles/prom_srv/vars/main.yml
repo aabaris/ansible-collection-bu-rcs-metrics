@@ -1,0 +1,3 @@
+# vars/main.yml
+---
+prom_srv_cfg_global: "{{ prom_srv_cfg_global_def | combine(prom_srv_cfg_global_extra, recursive=True) }}"

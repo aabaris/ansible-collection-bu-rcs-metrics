@@ -1,0 +1,51 @@
+---
+- name: Create Prometheus config directories
+  ansible.builtin.file:
+    path: "{{ prom_srv_dir }}/etc/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - scrape_configs
+    - rules
+    - targets
+
+- name: Install Prometheus main config
+  ansible.builtin.template:
+    src: etc/prometheus.yml.j2
+    dest: "{{ prom_srv_dir }}/etc/prometheus.yml"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload Prometheus
+
+- name: Install Prometheus scrape configs
+  ansible.builtin.copy:
+    src: "etc/scrape_configs/{{ item }}"
+    dest: "{{ prom_srv_dir }}/etc/scrape_configs/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ prom_srv_cfg_scrape_configs }}"
+  notify: Reload Prometheus
+
+- name: Install Prometheus rules
+  ansible.builtin.copy:
+    src: "etc/rules/{{ item }}"
+    dest: "{{ prom_srv_dir }}/etc/rules/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ prom_srv_cfg_rules }}"
+  notify: Reload Prometheus
+
+- name: Install Prometheus targets
+  ansible.builtin.template:
+    src: "etc/targets/{{ item }}.j2"
+    dest: "{{ prom_srv_dir }}/etc/targets/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ prom_srv_cfg_targets }}"
+  notify: Reload Prometheus
