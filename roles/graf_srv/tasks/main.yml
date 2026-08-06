@@ -56,7 +56,7 @@
     volumes:
       - "{{ graf_srv_dir }}/etc:/etc/grafana:ro,Z"
       - "{{ graf_srv_dir }}/data:/var/lib/grafana:rw,Z"
-    ports: "{{ graf_srv_port }}"
+    ports: "{{ graf_srv_ports }}"
   notify: Restart Grafana
 
 - name: Reload systemd to generate quadlet units
