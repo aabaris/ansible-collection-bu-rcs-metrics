@@ -1,8 +1,5 @@
-[
-  {
-    "targets": {{ prom_srv_cfg_node_targets | tojson }},
-    "labels": {
-      "nodeclass": "compute"
-    }
-  }
-]
+{% set node_groups = [] %}
+{% for target in prom_srv_cfg_node_targets %}
+{% set _ = node_groups.append({"targets": [target], "labels": {"host": target.split(':')[0], "nodeclass": "compute"}}) %}
+{% endfor %}
+{{ node_groups | tojson(indent=2) }}
