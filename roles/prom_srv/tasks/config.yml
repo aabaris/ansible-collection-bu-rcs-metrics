@@ -40,6 +40,9 @@
   loop: "{{ prom_srv_cfg_rules }}"
   notify: Reload Prometheus
 
+- name: Resolve per-device labels
+  import_tasks: resolve_nodes.yml
+
 - name: Install Prometheus targets
   ansible.builtin.template:
     src: "etc/targets/{{ item }}.j2"

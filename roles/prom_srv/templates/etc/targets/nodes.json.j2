@@ -1,5 +1,15 @@
+{% set nodes = prom_srv_cfg_nodes_resolved | selectattr('kind', 'equalto', 'host') | list %}
 {% set node_groups = [] %}
-{% for target in prom_srv_cfg_node_targets %}
-{% set _ = node_groups.append({"targets": [target], "labels": {"host": target.split(':')[0], "nodeclass": "compute"}}) %}
+{% for node in nodes %}
+{% set _ = node_groups.append({
+  "targets": [node.fqdn ~ ':' ~ node.port],
+  "labels": {
+    "device": node.fqdn,
+    "role": node.role,
+    "service": node.service,
+    "location": node.location,
+    "kind": node.kind
+  }
+}) %}
 {% endfor %}
 {{ node_groups | tojson(indent=2) }}

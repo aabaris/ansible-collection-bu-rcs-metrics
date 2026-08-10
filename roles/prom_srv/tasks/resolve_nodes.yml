@@ -1,0 +1,53 @@
+---
+# Resolves prom_srv_cfg_node_sets + prom_srv_cfg_nodes into prom_srv_cfg_nodes_resolved:
+# one record per device, with the kind/service default cascade applied
+# (label-schema.md §8). Imported by tasks/config.yml before targets are templated.
+
+- name: Reset the flattened and resolved node lists
+  ansible.builtin.set_fact:
+    prom_srv_cfg_nodes_flat: []
+    prom_srv_cfg_nodes_resolved: []
+
+- name: Build one record per set member and append it to the flat list
+  vars:
+    _fqdn: "{{ item.1.keys() | first if item.1 is mapping else item.1 }}"
+    _overrides: "{{ (item.1.values() | first) or {} if item.1 is mapping else {} }}"
+    _set_fields: "{{ item.0.value | dict2items | rejectattr('key', 'equalto', 'fqdns') | items2dict }}"
+  ansible.builtin.set_fact:
+    prom_srv_cfg_nodes_flat: >-
+      {{ prom_srv_cfg_nodes_flat +
+         [ _set_fields | combine({'fqdn': _fqdn}, _overrides, recursive=True) ] }}
+  loop: "{{ prom_srv_cfg_node_sets | dict2items | subelements('value.fqdns') }}"
+  loop_control:
+    label: "{{ item.1 }}"
+
+- name: Add standalone node entries not covered by a set
+  ansible.builtin.set_fact:
+    prom_srv_cfg_nodes_flat: "{{ prom_srv_cfg_nodes_flat + prom_srv_cfg_nodes }}"
+
+- name: Apply the kind/service default cascade to every device record
+  ansible.builtin.set_fact:
+    prom_srv_cfg_nodes_resolved: >-
+      {{ prom_srv_cfg_nodes_resolved +
+         [ prom_srv_cfg_kind_defaults.get(item.kind, {})
+           | combine(prom_srv_cfg_service_defaults.get(item.service, {}), item, recursive=True) ] }}
+  loop: "{{ prom_srv_cfg_nodes_flat }}"
+  loop_control:
+    label: "{{ item.fqdn }}"
+
+- name: Sort resolved nodes for stable diffs
+  ansible.builtin.set_fact:
+    prom_srv_cfg_nodes_resolved: "{{ prom_srv_cfg_nodes_resolved | sort(attribute='fqdn') }}"
+
+- name: Assert every resolved device has the fields a label needs
+  ansible.builtin.assert:
+    that:
+      - item.fqdn is defined
+      - item.kind is defined
+      - item.role is defined
+      - item.service is defined
+    fail_msg: "Device record missing a required field after resolution: {{ item }}"
+    quiet: true
+  loop: "{{ prom_srv_cfg_nodes_resolved }}"
+  loop_control:
+    label: "{{ item.fqdn | default('(no fqdn)') }}"

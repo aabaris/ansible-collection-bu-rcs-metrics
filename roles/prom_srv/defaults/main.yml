@@ -36,7 +36,14 @@ prom_srv_cfg_rules: []
 prom_srv_cfg_targets:
   - switches.json
   - nodes.json
-prom_srv_cfg_node_targets: []
-prom_srv_cfg_switch_targets: []
+# Per-device label resolution (label-schema.md §8 interim inventory).
+# Precedence, low to high: prom_srv_cfg_kind_defaults < prom_srv_cfg_service_defaults
+# < a node_sets entry's own fields < a set member's inline override
+# < a standalone prom_srv_cfg_nodes entry. Resolved into prom_srv_cfg_nodes_resolved
+# by tasks/resolve_nodes.yml before targets are templated.
+prom_srv_cfg_kind_defaults: {}
+prom_srv_cfg_service_defaults: {}
+prom_srv_cfg_node_sets: {}
+prom_srv_cfg_nodes: []
 
 prom_srv_cfg_cleanup: false

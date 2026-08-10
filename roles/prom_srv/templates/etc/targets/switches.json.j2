@@ -1,3 +1,15 @@
-[
-  {"targets": {{ prom_srv_cfg_switch_targets | tojson }}, "labels": {"role": "switch"}}
-]
+{% set switches = prom_srv_cfg_nodes_resolved | selectattr('kind', 'equalto', 'switch') | list %}
+{% set switch_groups = [] %}
+{% for switch in switches %}
+{% set _ = switch_groups.append({
+  "targets": [switch.fqdn],
+  "labels": {
+    "device": switch.fqdn,
+    "role": switch.role,
+    "service": switch.service,
+    "location": switch.location,
+    "kind": switch.kind
+  }
+}) %}
+{% endfor %}
+{{ switch_groups | tojson(indent=2) }}
