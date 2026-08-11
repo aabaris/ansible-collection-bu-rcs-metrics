@@ -20,9 +20,12 @@
     mode: "0644"
   notify: Reload Prometheus
 
+- name: Resolve per-device and per-job labels
+  import_tasks: resolve_nodes.yml
+
 - name: Install Prometheus scrape configs
-  ansible.builtin.copy:
-    src: "etc/scrape_configs/{{ item }}"
+  ansible.builtin.template:
+    src: "etc/scrape_configs/{{ prom_srv_cfg_scrape_config_set }}/{{ item }}.j2"
     dest: "{{ prom_srv_dir }}/etc/scrape_configs/{{ item }}"
     owner: root
     group: root
@@ -40,12 +43,9 @@
   loop: "{{ prom_srv_cfg_rules }}"
   notify: Reload Prometheus
 
-- name: Resolve per-device labels
-  import_tasks: resolve_nodes.yml
-
 - name: Install Prometheus targets
   ansible.builtin.template:
-    src: "etc/targets/{{ item }}.j2"
+    src: "etc/targets/{{ prom_srv_cfg_target_set }}/{{ item }}.j2"
     dest: "{{ prom_srv_dir }}/etc/targets/{{ item }}"
     owner: root
     group: root

@@ -1,4 +1,4 @@
-{% set switches = prom_srv_cfg_nodes_resolved | selectattr('kind', 'equalto', 'switch') | list %}
+{% set switches = prom_srv_cfg_device_jobs_resolved | selectattr('job', 'equalto', 'snmp') | list %}
 {% set switch_groups = [] %}
 {% for switch in switches %}
 {% set _ = switch_groups.append({

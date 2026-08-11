@@ -1,0 +1,2 @@
+{% set switches = prom_srv_cfg_device_jobs_resolved | selectattr('job', 'equalto', 'snmp') | list %}
+{{ [{"targets": switches | map(attribute='fqdn') | list}] | tojson(indent=2) }}

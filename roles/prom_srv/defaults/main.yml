@@ -36,11 +36,26 @@ prom_srv_cfg_rules: []
 prom_srv_cfg_targets:
   - switches.json
   - nodes.json
+# minimal: bare targets/scrape configs, no labels or per-kind params beyond
+# exporter/job defaults. with-label-schema: the device/role/service/location/kind
+# schema and per-job param resolution (label-schema.md). Set prom_srv_cfg_set to
+# switch both at once; override either one independently only if you need them to
+# diverge.
+prom_srv_cfg_set: minimal
+prom_srv_cfg_target_set: "{{ prom_srv_cfg_set }}"
+prom_srv_cfg_scrape_config_set: "{{ prom_srv_cfg_set }}"
+
 # Per-device label resolution (label-schema.md §8 interim inventory).
 # Precedence, low to high: prom_srv_cfg_kind_defaults < prom_srv_cfg_service_defaults
 # < a node_sets entry's own fields < a set member's inline override
 # < a standalone prom_srv_cfg_nodes entry. Resolved into prom_srv_cfg_nodes_resolved
-# by tasks/resolve_nodes.yml before targets are templated.
+# by tasks/resolve_nodes.yml before targets/scrape configs are templated.
+#
+# A kind's jobs (the exporters that scrape a device of that kind) resolve
+# separately: prom_srv_cfg_kind_defaults.<kind>.job_defaults applies to every job
+# under that kind, prom_srv_cfg_kind_defaults.<kind>.jobs.<job> overrides it per
+# job. Resolved into prom_srv_cfg_device_jobs_resolved (one row per device x job,
+# for targets) and prom_srv_cfg_jobs_resolved (one row per job, for scrape configs).
 prom_srv_cfg_kind_defaults: {}
 prom_srv_cfg_service_defaults: {}
 prom_srv_cfg_node_sets: {}

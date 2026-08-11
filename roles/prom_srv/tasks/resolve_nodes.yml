@@ -1,12 +1,19 @@
 ---
 # Resolves prom_srv_cfg_node_sets + prom_srv_cfg_nodes into prom_srv_cfg_nodes_resolved:
 # one record per device, with the kind/service default cascade applied
-# (label-schema.md §8). Imported by tasks/config.yml before targets are templated.
+# (label-schema.md §8). Then expands each device into one row per job its kind
+# declares (a kind can map to several jobs/exporters), producing:
+#   prom_srv_cfg_device_jobs_resolved  one row per device x job, for target files
+#   prom_srv_cfg_jobs_resolved         one row per job, for scrape config files
+# Imported by tasks/config.yml before targets/scrape configs are templated.
 
-- name: Reset the flattened and resolved node lists
+- name: Reset the flattened and resolved node/job lists
   ansible.builtin.set_fact:
     prom_srv_cfg_nodes_flat: []
     prom_srv_cfg_nodes_resolved: []
+    prom_srv_cfg_nodes_with_jobs: []
+    prom_srv_cfg_device_jobs_resolved: []
+    prom_srv_cfg_jobs_resolved: {}
 
 - name: Build one record per set member and append it to the flat list
   vars:
@@ -26,11 +33,14 @@
     prom_srv_cfg_nodes_flat: "{{ prom_srv_cfg_nodes_flat + prom_srv_cfg_nodes }}"
 
 - name: Apply the kind/service default cascade to every device record
+  vars:
+    # job_defaults/jobs belong to the per-job resolution below, not to the device
+    # record itself -- excluded here so they don't leak into a flat device field.
+    _kind_fields: "{{ prom_srv_cfg_kind_defaults.get(item.kind, {}) | dict2items | rejectattr('key', 'in', ['job_defaults', 'jobs']) | items2dict }}"
   ansible.builtin.set_fact:
     prom_srv_cfg_nodes_resolved: >-
       {{ prom_srv_cfg_nodes_resolved +
-         [ prom_srv_cfg_kind_defaults.get(item.kind, {})
-           | combine(prom_srv_cfg_service_defaults.get(item.service, {}), item, recursive=True) ] }}
+         [ _kind_fields | combine(prom_srv_cfg_service_defaults.get(item.service, {}), item, recursive=True) ] }}
   loop: "{{ prom_srv_cfg_nodes_flat }}"
   loop_control:
     label: "{{ item.fqdn }}"
@@ -51,3 +61,33 @@
   loop: "{{ prom_srv_cfg_nodes_resolved }}"
   loop_control:
     label: "{{ item.fqdn | default('(no fqdn)') }}"
+
+- name: Attach each device's job list so it can be expanded with subelements
+  vars:
+    _jobs: "{{ prom_srv_cfg_kind_defaults.get(item.kind, {}).get('jobs', {}).keys() | list }}"
+  ansible.builtin.set_fact:
+    prom_srv_cfg_nodes_with_jobs: "{{ prom_srv_cfg_nodes_with_jobs + [ item | combine({'_jobs': _jobs}) ] }}"
+  loop: "{{ prom_srv_cfg_nodes_resolved }}"
+  loop_control:
+    label: "{{ item.fqdn }}"
+
+- name: Expand every device into one row per job, with that job's resolved params
+  vars:
+    _job: "{{ item.1 }}"
+    _kind: "{{ item.0.kind }}"
+    _job_defaults: "{{ prom_srv_cfg_kind_defaults.get(_kind, {}).get('job_defaults', {}) }}"
+    _job_params: "{{ prom_srv_cfg_kind_defaults.get(_kind, {}).get('jobs', {}).get(_job, {}) }}"
+    _resolved_job_params: "{{ _job_defaults | combine(_job_params, recursive=True) }}"
+    _device_fields: "{{ item.0 | dict2items | rejectattr('key', 'equalto', '_jobs') | items2dict }}"
+  ansible.builtin.set_fact:
+    prom_srv_cfg_device_jobs_resolved: >-
+      {{ prom_srv_cfg_device_jobs_resolved +
+         [ _resolved_job_params | combine(_device_fields, {'job': _job}, recursive=True) ] }}
+    prom_srv_cfg_jobs_resolved: "{{ prom_srv_cfg_jobs_resolved | combine({_job: _resolved_job_params}, recursive=True) }}"
+  loop: "{{ prom_srv_cfg_nodes_with_jobs | subelements('_jobs') }}"
+  loop_control:
+    label: "{{ item.0.fqdn }} / {{ item.1 }}"
+
+- name: Sort device/job rows for stable diffs
+  ansible.builtin.set_fact:
+    prom_srv_cfg_device_jobs_resolved: "{{ prom_srv_cfg_device_jobs_resolved | sort(attribute='fqdn') }}"

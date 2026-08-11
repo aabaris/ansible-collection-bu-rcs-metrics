@@ -1,0 +1,19 @@
+---
+scrape_configs:
+  - job_name: snmp
+    scrape_interval: {{ prom_srv_cfg_jobs_resolved.snmp.scrape_interval }}
+    scrape_timeout: {{ prom_srv_cfg_jobs_resolved.snmp.scrape_timeout }}
+    metrics_path: {{ prom_srv_cfg_jobs_resolved.snmp.metrics_path }}
+    params:
+      module: [{{ prom_srv_cfg_jobs_resolved.snmp.module }}]
+      auth: [{{ prom_srv_cfg_jobs_resolved.snmp.auth }}]
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/targets/switches.json
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: rcs-snmp-exporter:9116

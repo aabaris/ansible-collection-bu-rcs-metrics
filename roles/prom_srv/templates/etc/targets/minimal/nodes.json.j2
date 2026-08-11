@@ -1,0 +1,6 @@
+{% set nodes = prom_srv_cfg_device_jobs_resolved | selectattr('job', 'equalto', 'node') | list %}
+{% set targets = [] %}
+{% for node in nodes %}
+{% set _ = targets.append(node.fqdn ~ ':' ~ node.port) %}
+{% endfor %}
+{{ [{"targets": targets}] | tojson(indent=2) }}
