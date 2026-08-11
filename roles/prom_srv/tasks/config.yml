@@ -45,10 +45,11 @@
 
 - name: Install Prometheus targets
   ansible.builtin.template:
-    src: "etc/targets/{{ item }}.j2"
-    dest: "{{ prom_srv_dir }}/etc/targets/{{ item }}"
+    src: etc/targets/targets.json.j2
+    dest: "{{ prom_srv_dir }}/etc/targets/{{ item }}.json"
     owner: root
     group: root
     mode: "0644"
-  loop: "{{ prom_srv_cfg_targets }}"
-  notify: Reload Prometheus
+  loop: "{{ prom_srv_cfg_devices.values() | map(attribute='exporters') | flatten | unique | sort }}"
+  loop_control:
+    loop_var: exporter
