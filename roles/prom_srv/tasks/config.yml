@@ -24,13 +24,15 @@
   notify: Reload Prometheus
 
 - name: Install Prometheus scrape configs
-  ansible.builtin.copy:
-    src: "etc/scrape_configs/{{ item }}"
-    dest: "{{ prom_srv_dir }}/etc/scrape_configs/{{ item }}"
+  ansible.builtin.template:
+    src: etc/scrape_configs/job.yml.j2
+    dest: "{{ prom_srv_dir }}/etc/scrape_configs/{{ job }}.yml"
     owner: root
     group: root
     mode: "0644"
-  loop: "{{ prom_srv_cfg_scrape_configs }}"
+  loop: "{{ prom_srv_cfg_jobs.keys() | sort }}"
+  loop_control:
+    loop_var: job
   notify: Reload Prometheus
 
 - name: Install Prometheus rules

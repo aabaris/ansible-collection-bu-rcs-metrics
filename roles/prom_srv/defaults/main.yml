@@ -28,10 +28,38 @@ prom_srv_cfg_global_def:
 
 prom_srv_cfg_global_extra: {}
 
-prom_srv_cfg_scrape_configs:
-  - prometheus.yml
-  - snmp.yml
-  - node.yml
+# Scrape jobs, keyed by job_name. Values are Prometheus-native scrape_config
+# dicts — absent keys simply don't render. Dicts merge recursively with
+# prom_srv_cfg_jobs_extra; lists replace.
+prom_srv_cfg_jobs_def:
+  prometheus:
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  node:
+    scrape_interval: 60s
+    file_sd_configs:
+      - files: ["/etc/prometheus/targets/node.json"]
+
+  snmp:
+    scrape_interval: 2m
+    scrape_timeout: 60s
+    metrics_path: /snmp
+    params:
+      module: [if_mib]
+      auth: [public_v2]
+    file_sd_configs:
+      - files: ["/etc/prometheus/targets/snmp.json"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: rcs-snmp-exporter:9116
+
+prom_srv_cfg_jobs_extra: {}
+
 prom_srv_cfg_rules: []
 
 prom_srv_cfg_cleanup: false

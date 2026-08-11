@@ -33,12 +33,12 @@
   loop_control:
     label: "{{ item.key }}"
 
-#- name: Assert every declared exporter has a scrape job
-#  vars:
-#    _declared: "{{ prom_srv_cfg_devices.values() | map(attribute='exporters') | flatten | unique | sort }}"
-#  ansible.builtin.assert:
-#    that:
-#      - _declared | difference(prom_srv_cfg_jobs.keys() | list) | length == 0
-#    fail_msg: >-
-#      Exporters declared on devices with no matching scrape job:
-#      {{ _declared | difference(prom_srv_cfg_jobs.keys() | list) }}
+- name: Assert every declared exporter has a scrape job
+  vars:
+    _declared: "{{ prom_srv_cfg_devices.values() | map(attribute='exporters') | flatten | unique | sort }}"
+  ansible.builtin.assert:
+    that:
+      - _declared | difference(prom_srv_cfg_jobs.keys() | list) | length == 0
+    fail_msg: >-
+      Exporters declared on devices with no matching scrape job:
+      {{ _declared | difference(prom_srv_cfg_jobs.keys() | list) }}
