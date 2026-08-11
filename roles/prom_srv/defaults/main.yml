@@ -36,7 +36,21 @@ prom_srv_cfg_rules: []
 prom_srv_cfg_targets:
   - switches.json
   - nodes.json
-prom_srv_cfg_node_targets: []
-prom_srv_cfg_switch_targets: []
-
 prom_srv_cfg_cleanup: false
+
+# Device inventory. Keyed on device_name (the join key, usually FQDN).
+#   labels        become real labels on every sample from that device
+#   exporters     which scrape jobs this device appears in
+#   target_labels per-exporter target overrides (__param_*, __address__, ...)
+prom_srv_cfg_devices: {}
+
+# Every device's labels dict must contain all of these.
+prom_srv_cfg_required_labels:
+  - kind
+  - role
+  - service
+
+# Port each exporter listens on. Omit for proxied exporters (snmp) — the
+# target is then a bare device_name and the relabel chain supplies __address__.
+prom_srv_cfg_exporter_ports:
+  node: 9100

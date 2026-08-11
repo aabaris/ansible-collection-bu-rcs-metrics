@@ -11,6 +11,9 @@
     - rules
     - targets
 
+- name: Validate device inventory
+  ansible.builtin.import_tasks: validate.yml
+
 - name: Install Prometheus main config
   ansible.builtin.template:
     src: etc/prometheus.yml.j2
