@@ -30,6 +30,16 @@
       vars:
         _extracted: "{{ node_exporter_cache_dir }}/node_exporter-{{ node_exporter_version }}.{{ node_exporter_arch }}/node_exporter"
 
+- name: Create nodde_exporter service top level directories
+  ansible.builtin.file:
+    path: "{{ item.dir }}"
+    state: directory
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0755') }}"
+  loop:
+    - { dir:  "/opt/node_exporter" }
+
 - name: Create node_exporter system user
   ansible.builtin.user:
     name: "{{ node_exporter_user }}"
