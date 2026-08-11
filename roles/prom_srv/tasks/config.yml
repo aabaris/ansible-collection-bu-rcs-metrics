@@ -46,7 +46,7 @@
 - name: Install Prometheus targets
   ansible.builtin.template:
     src: etc/targets/targets.json.j2
-    dest: "{{ prom_srv_dir }}/etc/targets/{{ item }}.json"
+    dest: "{{ prom_srv_dir }}/etc/targets/{{ exporter }}.json"
     owner: root
     group: root
     mode: "0644"
