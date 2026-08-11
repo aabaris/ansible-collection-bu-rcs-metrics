@@ -33,9 +33,7 @@ prom_srv_cfg_scrape_configs:
   - snmp.yml
   - node.yml
 prom_srv_cfg_rules: []
-prom_srv_cfg_targets:
-  - switches.json
-  - nodes.json
+
 prom_srv_cfg_cleanup: false
 
 # Device inventory. Keyed on device_name (the join key, usually FQDN).

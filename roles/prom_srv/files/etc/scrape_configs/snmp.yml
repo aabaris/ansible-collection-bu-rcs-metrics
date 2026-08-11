@@ -9,7 +9,7 @@ scrape_configs:
       auth: [public_v2]
     file_sd_configs:
       - files:
-          - /etc/prometheus/targets/switches.json
+          - /etc/prometheus/targets/snmp.json
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
