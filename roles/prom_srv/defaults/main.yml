@@ -28,15 +28,55 @@ prom_srv_cfg_global_def:
 
 prom_srv_cfg_global_extra: {}
 
-prom_srv_cfg_scrape_configs:
-  - prometheus.yml
-  - snmp.yml
-  - node.yml
+# Scrape jobs, keyed by job_name. Values are Prometheus-native scrape_config
+# dicts — absent keys simply don't render. Dicts merge recursively with
+# prom_srv_cfg_jobs_extra; lists replace.
+prom_srv_cfg_jobs_def:
+  prometheus:
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  node:
+    scrape_interval: 60s
+    file_sd_configs:
+      - files: ["/etc/prometheus/targets/node.json"]
+
+  snmp:
+    scrape_interval: 2m
+    scrape_timeout: 60s
+    metrics_path: /snmp
+    params:
+      module: [if_mib]
+      auth: [public_v2]
+    file_sd_configs:
+      - files: ["/etc/prometheus/targets/snmp.json"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: rcs-snmp-exporter:9116
+
+prom_srv_cfg_jobs_extra: {}
+
 prom_srv_cfg_rules: []
-prom_srv_cfg_targets:
-  - switches.json
-  - nodes.json
-prom_srv_cfg_node_targets: []
-prom_srv_cfg_switch_targets: []
 
 prom_srv_cfg_cleanup: false
+
+# Device inventory. Keyed on device_name (the join key, usually FQDN).
+#   labels        become real labels on every sample from that device
+#   exporters     which scrape jobs this device appears in
+#   target_labels per-exporter target overrides (__param_*, __address__, ...)
+prom_srv_cfg_devices: {}
+
+# Every device's labels dict must contain all of these.
+prom_srv_cfg_required_labels:
+  - kind
+  - role
+  - service
+
+# Port each exporter listens on. Omit for proxied exporters (snmp) — the
+# target is then a bare device_name and the relabel chain supplies __address__.
+prom_srv_cfg_exporter_ports:
+  node: 9100
