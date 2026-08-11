@@ -1,0 +1,18 @@
+node_exporter_version: "1.9.1"
+node_exporter_arch: linux-amd64
+node_exporter_port: 9100
+
+node_exporter_user: node_exporter
+node_exporter_bin: /opt/node_exporter/node_exporter
+node_exporter_textfile_dir: /var/lib/node_exporter/textfile
+
+# Controller-side download cache
+node_exporter_cache_dir: "/tmp/node_exporter-cache"
+
+node_exporter_base_url: "https://github.com/prometheus/node_exporter/releases/download"
+
+# Overriding this list replaces it wholesale.
+node_exporter_flags:
+  - "--web.listen-address=:{{ node_exporter_port }}"
+  - "--collector.cpu.info"
+  - "--collector.textfile.directory={{ node_exporter_textfile_dir }}"
