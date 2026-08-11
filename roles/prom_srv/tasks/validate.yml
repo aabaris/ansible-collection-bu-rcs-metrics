@@ -1,9 +1,18 @@
 ---
-- name: Assert every device has the required labels
+- name: Assert every device has a labels mapping
   ansible.builtin.assert:
     that:
       - item.value.labels is defined
       - item.value.labels is mapping
+    fail_msg: "Device {{ item.key }} has no labels mapping"
+    quiet: true
+  loop: "{{ prom_srv_cfg_devices | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+
+- name: Assert every device has the required labels
+  ansible.builtin.assert:
+    that:
       - prom_srv_cfg_required_labels | difference(item.value.labels.keys() | list) | length == 0
     fail_msg: >-
       Device {{ item.key }} is missing required labels:
