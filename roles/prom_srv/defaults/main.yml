@@ -27,7 +27,7 @@ prom_srv_cfg_global_def:
   label_value_length_limit: 512
 
 prom_srv_cfg_global_extra: {}
-prom_srv_cfg_global_join_lable: rcs_device
+prom_srv_cfg_join_label: rcs_device
 
 # Scrape jobs, keyed by job_name. Values are Prometheus-native scrape_config
 # dicts — absent keys simply don't render. Dicts merge recursively with
@@ -73,9 +73,9 @@ prom_srv_cfg_devices: {}
 
 # Every device's labels dict must contain all of these.
 prom_srv_cfg_required_labels:
-  - kind
-  - role
-  - service
+  - rcs_kind
+  - rcs_role
+  - rcs_service
 
 # Port each exporter listens on. Omit for proxied exporters (snmp) — the
 # target is then a bare rcs_device and the relabel chain supplies __address__.

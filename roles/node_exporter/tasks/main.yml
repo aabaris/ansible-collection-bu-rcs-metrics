@@ -1,6 +1,5 @@
 ---
 - name: Fetch node_exporter to the controller cache
-  when: true
   run_once: true
   delegate_to: localhost
   become: false

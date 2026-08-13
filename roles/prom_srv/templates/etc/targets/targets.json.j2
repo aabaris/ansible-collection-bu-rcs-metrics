@@ -4,7 +4,7 @@
 {%- if exporter in dev.exporters -%}
 {%- set _ = out.append({
       'targets': [name ~ (':' ~ port if port else '')],
-      'labels': {prom_srv_dfg_join_label: name}
+      'labels': {prom_srv_cfg_join_label: name}
                 | combine(dev.labels)
                 | combine(dev.target_labels[exporter] | default({}))
     }) -%}
