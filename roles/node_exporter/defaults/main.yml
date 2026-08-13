@@ -8,11 +8,11 @@ node_exporter_port: 9100
 # exporter roles.
 node_exporter_prefix: /opt/prom_exporters
 node_exporter_state_dir: /var/lib/prom_exporters
-node_exporter_owner: rcs_monitor
-node_exporter_group: rcs_monitor
+node_exporter_owner: monitor
+node_exporter_group: monitor
 node_exporter_uid: 600
 node_exporter_gid: 600
-node_exporter_home: /home/rcs_monitor
+node_exporter_home: /home/monitor
 node_exporter_shell: /sbin/nologin
 node_exporter_comment: "Monitor User"
 
