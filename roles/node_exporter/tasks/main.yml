@@ -1,8 +1,5 @@
 ---
 - name: Fetch node_exporter to the controller cache
-  run_once: true
-  delegate_to: localhost
-  become: false
   block:
     - name: Create controller cache directory
       ansible.builtin.file:
@@ -25,35 +22,48 @@
         src: "{{ node_exporter_cache_dir }}/node_exporter-{{ node_exporter_version }}.{{ node_exporter_arch }}.tar.gz"
         dest: "{{ node_exporter_cache_dir }}"
         remote_src: true
-        creates: "{{ _extracted }}"
-      vars:
-        _extracted: "{{ node_exporter_cache_dir }}/node_exporter-{{ node_exporter_version }}.{{ node_exporter_arch }}/node_exporter"
+        creates: "{{ node_exporter_cache_dir }}/node_exporter-{{ node_exporter_version }}.{{ node_exporter_arch }}/node_exporter"
+  become: false
+  delegate_to: localhost
+  run_once: true
 
-- name: Create nodde_exporter service top level directories
-  ansible.builtin.file:
-    path: "{{ item.dir }}"
-    state: directory
-    owner: "{{ item.owner | default('root') }}"
-    group: "{{ item.group | default('root') }}"
-    mode: "{{ item.mode | default('0755') }}"
-  loop:
-    - { dir:  "/opt/node_exporter" }
-
-- name: Create node_exporter system user
-  ansible.builtin.user:
-    name: "{{ node_exporter_user }}"
+- name: Create exporter group
+  ansible.builtin.group:
+    name: "{{ node_exporter_group }}"
+    gid: "{{ node_exporter_gid }}"
     system: true
-    shell: /sbin/nologin
-    home: /
-    create_home: false
 
-- name: Create textfile collector directory
+- name: Create exporter owner account
+  ansible.builtin.user:
+    name: "{{ node_exporter_owner }}"
+    uid: "{{ node_exporter_uid }}"
+    group: "{{ node_exporter_group }}"
+    home: "{{ node_exporter_home }}"
+    shell: "{{ node_exporter_shell }}"
+    comment: "{{ node_exporter_comment }}"
+    create_home: false
+    system: true
+
+- name: Create shared exporter directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ node_exporter_prefix }}"
+    - "{{ node_exporter_prefix }}/bin"
+    - "{{ node_exporter_prefix }}/etc"
+    - "{{ node_exporter_state_dir }}"
+
+- name: Create node_exporter textfile directory
   ansible.builtin.file:
     path: "{{ node_exporter_textfile_dir }}"
     state: directory
     owner: root
-    group: "{{ node_exporter_user }}"
-    mode: "0750"
+    group: "{{ node_exporter_group }}"
+    mode: "0770"
 
 - name: Install node_exporter binary
   ansible.builtin.copy:
@@ -62,6 +72,15 @@
     owner: root
     group: root
     mode: "0755"
+  notify: Restart node_exporter
+
+- name: Install node_exporter options file
+  ansible.builtin.template:
+    src: node_exporter.options.j2
+    dest: "{{ node_exporter_options_file }}"
+    owner: root
+    group: root
+    mode: "0644"
   notify: Restart node_exporter
 
 - name: Install node_exporter systemd unit
@@ -73,7 +92,7 @@
     mode: "0644"
   notify: Restart node_exporter
 
-- name: Enable and start node_exporter
+- name: Enable and start
   ansible.builtin.systemd_service:
     name: node_exporter
     enabled: true

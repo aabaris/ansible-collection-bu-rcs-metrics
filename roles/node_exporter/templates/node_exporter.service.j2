@@ -1,26 +1,48 @@
+# {{ ansible_managed }}
 [Unit]
 Description=Prometheus node_exporter
-After=network-online.target
+After=network-online.target local-fs.target
 Wants=network-online.target
 
 [Service]
-User={{ node_exporter_user }}
-Group={{ node_exporter_user }}
-ExecStart={{ node_exporter_bin }} \
-{% for flag in node_exporter_flags %}
-    {{ flag }}{{ " \\" if not loop.last }}
-{% endfor %}
+User={{ node_exporter_owner }}
+Group={{ node_exporter_group }}
+EnvironmentFile={{ node_exporter_options_file }}
+ExecStart={{ node_exporter_bin }} $OPTIONS
 Restart=always
 RestartSec=60
 
+# Sandboxing. Do NOT add ProtectProc, ProcSubset, PrivateNetwork or
+# PrivateUsers — each breaks node_exporter's data sources.
 NoNewPrivileges=yes
-ProtectSystem=strict
-ProtectHome=yes
 PrivateTmp=yes
-ProtectControlGroups=yes
+ProtectSystem=strict
+ReadWritePaths={{ node_exporter_textfile_dir }}
+ProtectHome=read-only
+ProtectKernelTunables=yes
 ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectHostname=yes
+ProtectClock=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
 RestrictSUIDSGID=yes
 LockPersonality=yes
+CapabilityBoundingSet=
+# AF_NETLINK is required — netdev and netclass use netlink
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+UMask=0077
+LimitNOFILE=8192
+{% if node_exporter_allow_from | length > 0 %}
+
+# Per-unit network ACL. Requires cgroup v2 + BPF. Filters both directions.
+IPAddressDeny=any
+IPAddressAllow=localhost
+{% for addr in node_exporter_allow_from %}
+IPAddressAllow={{ addr }}
+{% endfor %}
+{% endif %}
 
 [Install]
 WantedBy=multi-user.target
