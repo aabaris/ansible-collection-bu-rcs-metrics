@@ -11,7 +11,7 @@ ExecStart={{ node_exporter_bin }} \
     {{ flag }}{{ " \\" if not loop.last }}
 {% endfor %}
 Restart=on-failure
-RestartSec=5
+RestartSec=60
 
 NoNewPrivileges=yes
 ProtectSystem=strict
