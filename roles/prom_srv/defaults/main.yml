@@ -41,6 +41,10 @@ prom_srv_cfg_jobs_def:
     scrape_interval: 60s
     file_sd_configs:
       - files: ["/etc/prometheus/targets/node.json"]
+  nvidia_gpu:
+    scrape_interval: 60s
+    file_sd_configs:
+      - files: ["/etc/prometheus/targets/nvidia_gpu.json"]
 
   snmp:
     scrape_interval: 2m
@@ -81,3 +85,4 @@ prom_srv_cfg_required_labels:
 # target is then a bare rcs_device and the relabel chain supplies __address__.
 prom_srv_cfg_exporter_ports:
   node: 9100
+  nvidia_gpu: 9835
