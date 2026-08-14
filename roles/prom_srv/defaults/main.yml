@@ -27,6 +27,7 @@ prom_srv_cfg_global_def:
   label_value_length_limit: 512
 
 prom_srv_cfg_global_extra: {}
+prom_srv_cfg_join_label: rcs_device
 
 # Scrape jobs, keyed by job_name. Values are Prometheus-native scrape_config
 # dicts — absent keys simply don't render. Dicts merge recursively with
@@ -40,6 +41,10 @@ prom_srv_cfg_jobs_def:
     scrape_interval: 60s
     file_sd_configs:
       - files: ["/etc/prometheus/targets/node.json"]
+  nvidia_gpu:
+    scrape_interval: 60s
+    file_sd_configs:
+      - files: ["/etc/prometheus/targets/nvidia_gpu.json"]
 
   snmp:
     scrape_interval: 2m
@@ -64,7 +69,7 @@ prom_srv_cfg_rules: []
 
 prom_srv_cfg_cleanup: false
 
-# Device inventory. Keyed on device_name (the join key, usually FQDN).
+# Device inventory. Keyed on rcs_device (the join key, usually FQDN).
 #   labels        become real labels on every sample from that device
 #   exporters     which scrape jobs this device appears in
 #   target_labels per-exporter target overrides (__param_*, __address__, ...)
@@ -72,11 +77,12 @@ prom_srv_cfg_devices: {}
 
 # Every device's labels dict must contain all of these.
 prom_srv_cfg_required_labels:
-  - kind
-  - role
-  - service
+  - rcs_kind
+  - rcs_role
+  - rcs_service
 
 # Port each exporter listens on. Omit for proxied exporters (snmp) — the
-# target is then a bare device_name and the relabel chain supplies __address__.
+# target is then a bare rcs_device and the relabel chain supplies __address__.
 prom_srv_cfg_exporter_ports:
   node: 9100
+  nvidia_gpu: 9835

@@ -22,6 +22,18 @@
   loop_control:
     label: "{{ item.key }}"
 
+- name: Assert the join key is not declared in labels
+  ansible.builtin.assert:
+    that:
+      - prom_srv_cfg_join_label not in item.value.labels
+    fail_msg: >-
+      Device {{ item.key }} declares {{ prom_srv_cfg_join_label }} in labels;
+      it is derived from the device key
+    quiet: true
+  loop: "{{ prom_srv_cfg_devices | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+
 - name: Assert every device declares at least one exporter
   ansible.builtin.assert:
     that:
