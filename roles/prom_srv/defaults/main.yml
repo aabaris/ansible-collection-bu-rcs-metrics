@@ -38,7 +38,7 @@ prom_srv_cfg_jobs_def:
       - targets: ["localhost:9090"]
 
   node:
-    scrape_interval: 60s
+    scrape_interval: 30s
     file_sd_configs:
       - files: ["/etc/prometheus/targets/node.json"]
   nvidia_gpu:
