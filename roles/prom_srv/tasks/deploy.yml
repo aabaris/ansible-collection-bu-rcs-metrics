@@ -13,7 +13,7 @@
 
 - name: Check on SELinux
   ansible.builtin.command: getenforce
-    register: _selinux_cmd
+    register: prom_srv_selinux_cmd
   changed_when: false
 
 - name: Set SELinux context for Prometheus config
@@ -21,13 +21,13 @@
     target: "{{ prom_srv_dir }}/etc(/.*)?"
     setype: container_file_t
     state: present
-  when: _selinux_cmd.stdout != "Disabled"
+  when: prom_srv_selinux_cmd.stdout != "Disabled"
 
 - name: Apply SELinux context
   ansible.builtin.command:
     cmd: "restorecon -R {{ prom_srv_dir }}/etc"
   changed_when: false
-  when: _selinux_cmd.stoud != "Disabled"
+  when: prom_srv_selinux_cmd.stoud != "Disabled"
 
 - name: Create Prometheus Podman Network
   containers.podman.podman_network:
