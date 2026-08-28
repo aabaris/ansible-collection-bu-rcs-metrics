@@ -12,7 +12,7 @@
     - { dir: "etc" }
 
 - name: Handle SELinux
-  ansible.builtin.tasks: selinux.yml
+  ansible.builtin.include_tasks: selinux.yml
   when: ansible_selinux.status | default('disabled') != 'disabled'
 
 - name: Create Prometheus Podman Network
