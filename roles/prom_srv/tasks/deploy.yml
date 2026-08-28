@@ -13,7 +13,7 @@
 
 - name: Check on SELinux
   ansible.builtin.command: getenforce
-    register: prom_srv_selinux_cmd
+  register: prom_srv_selinux_cmd
   changed_when: false
 
 - name: Set SELinux context for Prometheus config
