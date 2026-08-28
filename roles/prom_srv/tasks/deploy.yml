@@ -11,16 +11,9 @@
     - { dir: "data", owner: 65534, group: 65534 }
     - { dir: "etc" }
 
-- name: Set SELinux context for Prometheus config
-  community.general.sefcontext:
-    target: "{{ prom_srv_dir }}/etc(/.*)?"
-    setype: container_file_t
-    state: present
-
-- name: Apply SELinux context
-  ansible.builtin.command:
-    cmd: "restorecon -R {{ prom_srv_dir }}/etc"
-  changed_when: false
+- name: Handle SELinux
+  ansible.builtin.include_tasks: selinux.yml
+  when: ansible_selinux.status | default('disabled') != 'disabled'
 
 - name: Create Prometheus Podman Network
   containers.podman.podman_network:
