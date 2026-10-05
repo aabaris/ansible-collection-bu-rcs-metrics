@@ -25,6 +25,7 @@
         creates: "{{ node_exporter_cache_dir }}/node_exporter-{{ node_exporter_version }}.{{ node_exporter_arch }}/node_exporter"
   become: false
   delegate_to: localhost
+  changed_when: false
   run_once: true
 
 - name: Create exporter group
